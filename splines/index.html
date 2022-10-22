@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>w · SVG to JPEG XL</title>
+
+    <link phx-track-static rel="stylesheet" href="/assets/app.css">
+  </head>
+
+  <body>
+    <div class="sidebar">
+      <div class="title"><a href="/">w</a></div>
+      <div class="section">
+        <div class="header">
+          Things
+        </div>
+        <div class="list">
+          <div><a href="/firefox">Firefox</a></div>
+          <div><a href="/useful_stuff">Useful Stuff</a></div>
+          <div><a href="/jxlsplines">JXL Splines</a></div>
+          <div><a href="/something">Something</a></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="header">
+          Other Things
+        </div>
+        <div class="list">
+          <div><a href="https://bin.grass.moe/">Binaries</a></div>
+          <div><a href="/catmull_rom">Catmull-Rom</a></div>
+          <div><a href="https://tube.grass.moe/">grasstube</a></div>
+          <div><a href="https://m.grass.moe/">LL! Doujins</a></div>
+          <div><a href="https://booru.grass.moe/">LiveBooru</a></div>
+        </div>
+      </div>
+      <div class="section">
+        <div><a href="https://github.com/wwww-wwww">GitHub</a></div>
+      </div>
+      <div class="section">
+<a href="/contact">Profile</a>
+      </div>
+    </div>
+    <div class="content">
+      <div class="header">SVG to JPEG XL</div>
+      <section class="body"><main class="container">
+<p><i>Created 2022-03-30</i></p>
+<div class="tblcontents">
+  <div>
+    <ol>
+      <li><a href="#Introduction">Introduction</a></li>
+      <li><a href="#bezier">Bezier curves</a></li>
+      <li><a href="#catmullrom">Catmull-Rom splines</a></li>
+      <li><a href="#catmullrom2">Optimizing</a></li>
+      <li><a href="#svg">SVG</a></li>
+      <li><a href="#conclusion">Conclusion &amp; Code</a></li>
+      <li><a href="#notes">Notes</a></li>
+    </ol>
+  </div>
+</div>
+<h3 id="Introduction">Introduction</h3>
+<p>We're all used to using an image format for pictures and SVGs for
+  lines and vector images. Now, JPEG XL can do both, kinda.</p>
+
+<p>
+  On this page, I'll be discussing <a href="https://en.wikipedia.org/wiki/B%C3%A9zier_curve#Cubic_B%C3%A9zier_curves">
+    Cubic Bezier curves</a> and
+  <a href="https://en.wikipedia.org/wiki/Centripetal_Catmull%E2%80%93Rom_spline">
+    Centripetal Catmull-Rom splines</a>. Also, the ideas and methods I use
+  here are quite basic and should be easy to follow. It being too simple
+  and boring could also be a reason it hasn't been explored in depth.
+</p>
+
+<p>
+  There's a big difference between a Bezier curve and a Catmull-Rom
+  spline. One is a type of parametric curve and the other is a type of
+  cubic spline interpolation. The four control points used to represent a
+  Bezier curve can't be used to create the four control points of a
+  Catmull-Rom spline. Yes, I've read
+  <a href="https://link.springer.com/article/10.1007/s42979-021-00770-x">this</a>
+  and <a href="https://www.researchgate.net/publication/345989632_Conversion_Between_Cubic_Bezier_Curves_and_Catmull-Rom_Splines">this</a>,
+  the top two search results on the topic. They do not work.
+</p>
+
+<p>
+  Maybe saying they don't work is a bit inaccurate. They do perfectly
+  recreate the curves as shown
+  <a href="https://cdn.discordapp.com/attachments/824000991891554375/880464067293241374/spline.png">here</a>,
+  but these go beyond the start and end point of the desired spline. This
+  is when I realized that Catmull-Rom splines is just Catmull-Rom
+  interpolation between points. This may be familiar if you've used the
+  line tool in paint.net or the curvature pen tool in Photoshop. Anyway,
+  let's stop thinking too hard about this since all that's needed to be
+  done is to sample the Bezier curve to get those points.
+</p>
+
+<p id="bezier">Let's first define the Bezier curve.</p>
+
+<p><span class="math inline">\(\mathbf{B}(t) = (1 - t)^3 \mathbf{P}_0 +
+    3t(1 - t)^2 \mathbf{P}_1 + 3t^2(1 - t) \mathbf{P}_2 + t^3 \mathbf{P}_3,
+    0 \leq t \leq 1\)</span></p>
+
+<pre><code>def bezier1d(p0, p1, p2, p3, t):
+  return p0 * (1 - t)**3 + 3 * p1 * t * (1 - t)**2 + 3 * p2 * t**2 * (1 - t) + p3 * t**3
+
+def bezier2d(p0, p1, p2, p3, t):
+  return (
+    bezier1d(p0[0], p1[0], p2[0], p3[0], t),
+    bezier1d(p0[1], p1[1], p2[1], p3[1], t),
+  )</code></pre>
+
+<p>
+  We also want to use equidistant points. We can achieve this by using the
+  first derivative to get the size of each step. This is an approximation
+  of the arc length parameterization.
+</p>
+
+<p><span class="math inline">\(\mathbf{B}&#39;(t) = 3(1 -
+    t)^2(\mathbf{P}_1 - \mathbf{P}_0) + 6t(1-t)(\mathbf{P}_2 - \mathbf{P}_1)
+    + 3t^2(\mathbf{P}_3 - \mathbf{P}_2)\)</span></p>
+
+<pre><code>def bezier1d_dt(p0, p1, p2, p3, t):
+  return 3 * (1 - t)**2 * (p1 - p0) + 6 * t * (1 - t) * (p2 - p1) + 3 * t**2 * (p3 - p2)
+
+def bezier2d_dt(p0, p1, p2, p3, t):
+  return (
+    bezier1d_dt(p0[0], p1[0], p2[0], p3[0], t),
+    bezier1d_dt(p0[1], p1[1], p2[1], p3[1], t),
+  )</code></pre>
+
+<p>Now we can sample the curve.</p>
+
+<pre><code>def sample_bezier(p0, p1, p2, p3):
+  points = []
+
+  t = 0
+  while t &lt; 1:
+    if t &gt; 1: break
+    points.append(bezier2d(p0, p1, p2, p3, t))
+    dt = bezier2d_dt(p0, p1, p2, p3, t)
+    l = length(dt[0], dt[1])
+    t += 1 / l # 1 is the absolute distance per step
+
+  if t &gt; 1:
+    points.append(bezier2d(p0, p1, p2, p3, 1))
+
+  return points</code></pre>
+
+<h4>A Bezier curve with points (62, 168), (193, 18), (8, 20), (130, 170) on a 200x200 canvas:</h4>
+<svg width="200" height="200" viewBox="0 0 200 200" style="width: min(20em, 100%); height: auto;">
+  <path d="M 62 168 C 193 18, 8 20, 130 170" stroke="black" fill="transparent"></path>
+  <circle cx="62" cy="168" r="3" stroke="black" stroke-width="1" fill="transparent"></circle>
+  <circle cx="193" cy="18" r="3" stroke="black" stroke-width="1" fill="transparent"></circle>
+  <circle cx="8" cy="20" r="3" stroke="black" stroke-width="1" fill="transparent"></circle>
+  <circle cx="130" cy="170" r="3" stroke="black" stroke-width="1" fill="transparent"></circle>
+  <line x1="62" y1="168" x2="193" y2="18" stroke="blue" stroke-width="0.5"></line>
+  <line x1="8" y1="20" x2="130" y2="170" stroke="blue" stroke-width="0.5"></line>
+</svg>
+
+<h4>Sampling with straight line segments:</h4>
+<img src="/images/bezier_sampled_line.png" style="width: min(20em, 100%)">
+
+<h3 id="catmullrom">Creating the Catmull-Rom spline</h3>
+
+<p>
+  As mentioned in the introduction, these points can be used without any
+  further modification.
+</p>
+
+<p>Firstly, a point:</p>
+<pre><code>struct Point {
+  double x;
+  double y;
+
+  Point operator+(const Point &a) { return {x + a.x, y + a.y}; }
+  Point operator-(const Point &a) { return {x - a.x, y - a.y}; }
+  Point operator+(const double &a) { return {x + a, y + a}; }
+  Point operator-(const double &a) { return {x - a, y - a}; }
+  Point operator*(const double &a) { return {x * a, y * a}; }
+};</code></pre>
+
+<p>
+  The
+  <a href="https://en.wikipedia.org/wiki/Centripetal_Catmull%E2%80%93Rom_spline#Definition">definition</a>
+  of the Catmull-Rom spline is quite lengthy so I will only show here the
+  simplified code:
+</p>
+
+<pre><code>Point catmull_rom(Point points[4], double t) {
+  double alpha = 0.5;
+
+  Point p0 = points[0];
+  Point p1 = points[1];
+  Point p2 = points[2];
+  Point p3 = points[3];
+
+  Point a = p1 * 3.0 - p2 * 3.0 + p3 - p0;
+  Point b = p0 * 2.0 - p1 * 5.0 + p2 * 4.0 - p3;
+  Point c = p2 - p0;
+  Point d = p1 * 2.0;
+
+  return (a * pow(t, 3) + b * pow(t, 2) + c * t + d) * alpha;
+}</code></pre>
+
+<h4>The same points input into my <a href="https://grass.moe/catmull-rom/">Catmull-Rom visualizer</a>:</h4>
+<img src="/images/bezier_sampled_catmull-rom.png" style="width: min(20em, 100%)">
+
+<p>
+  It works! Obviously, there's way too many points. At some resolution,
+  there will be points which are redundant.
+</p>
+
+<h3 id="catmullrom2">Optimizing Catmull-Rom splines</h3>
+
+<p>
+  This part actually took more brain power. Not because it was hard, but
+  because it was confusing to think of.
+</p>
+
+<p>
+  The method I will use to optimize is to remove a point and calculate the
+  error. The error function can be defined as the area between the old and
+  new spline. To do this, I will sample the two lines and then run the
+  shoelace algorithm to find the area. If the area is smaller than a set
+  error, I will delete the point.
+</p>
+
+<p>
+  This method is a bit greedy so I will store those errors and start by
+  deleting the one with the least error.
+</p>
+
+<h4>Catmull-Rom:</h4>
+<h4 id="catmullrom2">Sampling:</h4>
+<p>
+  When sampling to calculate the area, I'll collect double the samples
+  between the second and third point in the new line. The first half of
+  these samples will be matched with the points between the second and
+  third point in the new line and the second half will be matched with the
+  points between the third and fourth point in the new line.
+</p>
+<p>tl;dr: see the JS demo below</p>
+<pre><code>int res = 10;
+
+int start = 1;
+int center = 2;
+int end = 4;
+std::vector&lt;Point&gt; line1_spls;
+std::vector&lt;Point&gt; line2_spls;
+
+void add_samples(std::vector&lt;Point&gt; &spls, std::vector&lt;Point&gt; points, int i, int count) {
+  spls.push_back(points[i]);
+
+  Point line[4] = {
+    i ? points[i - 1] : points[0],
+    points[i],
+    points[i + 1],
+    i + 2 &lt; points.size() ? points[i + 2] : points[i + 1],
+  };
+
+  for (int j = 1; j &lt; count; j++) {
+    Point p = catmull_rom(line, (double)j / count);
+    spls.push_back(p);
+  }
+  spls.push_back(i + 2 &lt; points.size() ? points[i + 2] : points[i + 1]);
+}
+
+for (int i = start; i &lt; end; i++) {
+  add_samples(line1_spls, line1, i, res);
+}
+line1_spls.push_back(line1[end]);
+
+for (int i = start; i &lt; end - 1; i++) {
+  add_samples(line2_spls, line1, i, i == center - 1 ? res * 2 : res);
+}
+line2_spls.push_back(line2[end]);</code></pre>
+
+<h4>Shoelace:</h4>
+<pre><code>double shoelace(Point p0, Point p1, Point p2, Point p3) {
+  return abs(((p0.x * p1.y - p0.y * p1.x) + (p1.x * p2.y - p1.y * p2.x) +
+              (p2.x * p3.y - p2.y * p3.x) + (p3.x * p0.y - p3.y * p0.x)) /
+              2);
+}</code></pre>
+
+<h4>JS Demo</h4>
+<div>
+  <canvas id="canvas" width="1000" height="1000" style="position: relative; width: min(400px, 100%); height: min(400px, 100%); border: 1px solid dimgray;"></canvas>
+  <div id="txt_area"></div>
+  <script defer phx-track-static type="text/javascript" src="/assets/splines.js"></script>
+</div>
+
+<h4>The same points before, optimized with an allowed error of 8 square pixels, scaled by 2:</h4>
+<img src="/images/bezier_optimized_catmull-rom.png" style="width: min(20em, 100%)">
+
+<h3 id="svg">SVG?</h3>
+<p>
+  In SVG, paths are combinations of lines (2 points), cubic beizers (4
+  control points), quadratic beziers (3 control points), and arcs.
+</p>
+
+<p>
+  In Python we can use svgpathtools and xml.etree.ElementTree to get the
+  paths and basic information on the SVG.
+</p>
+
+<pre><code>import svgpathtools
+import xml.etree.ElementTree as ET
+
+file = "curves.svg"
+
+paths, attributes, svg_attribs = svgpathtools.svg2paths2(file)
+
+tree = ET.parse(file)
+root = tree.getroot()
+viewBox = [float(x) for x in root.attrib["viewBox"].split(" ")]
+off_x = -viewBox[0]
+off_y = -viewBox[1]
+
+try:
+  width = float(root.attrib["width"])
+except:
+  width = viewBox[2]
+
+try:
+  height = float(root.attrib["height"])
+except:
+  height = viewBox[3]
+
+scale_x = width / viewBox[2]
+scale_y = height / viewBox[3]</code></pre>
+
+<p>And a short example converting a cubic bezier into points and
+  optimizing them:</p>
+
+<pre><code>import subprocess
+import optimize
+
+splines = []
+for path, attribute in zip(paths, attributes):
+  current_spline = []
+  for segment in path:
+    if type(segment) == svgpathtools.CubicBezier:
+      p0 = (segment.start.real + off_x, segment.start.imag + off_y)
+      p1 = (segment.control1.real + off_x, segment.control1.imag + off_y)
+      p2 = (segment.control2.real + off_x, segment.control2.imag + off_y)
+      p3 = (segment.end.real + off_x, segment.end.imag + off_y)
+
+      p0 = (p0[0] * scale_x, p0[1] * scale_y)
+      p1 = (p1[0] * scale_x, p1[1] * scale_y)
+      p2 = (p2[0] * scale_x, p2[1] * scale_y)
+      p3 = (p3[0] * scale_x, p3[1] * scale_y)
+
+      cubic_points = sample_bezier(p0, p1, p2, p3)
+      cubic_points = [(p[0], p[1]) for p in cubic_points]
+
+      new_points = optimize.optimize(cubic_points, 4)
+      splines.append(new_points)</code></pre>
+
+<h3 id="conclusion">Conclusion</h3>
+<p>
+  The final points can be used with the jxl_from_tree tool.
+  <a href="https://jxl-art.surma.technology/wtf.html">How.</a>
+</p>
+<p>
+  Was this a waste of time? No. I'm now able to make
+<a href="/jxlsplines">images smaller than the original SVGs.</a>
+  Obviously JPEG XL is a raster image format and has set image dimensions,
+  but SVG also technically does and upsampling can also be done with JPEG XL.
+</p>
+<p>
+  What did I learn? I didn't realize it before, but cubic splines are
+  great for drawing. They are much easier to draw with than Bezier curves.
+</p>
+<p>
+  Relevant code and a complete(working) program can be found
+  <a href="https://github.com/wwww-wwww/spline">here</a>.
+</p>
+
+<h3 id="notes">Notes</h3>
+<p>The optimizing section is done in C++ since Python is too slow for this
+  task.</p>
+<p>Instead of only a point being removed, a point can be removed and
+  surrounding points also shifted.</p>
+<p>Another error function can use the tangents along the spline. This may
+  perform better in keeping the general shape.</p>
+<p>Segments in SVG paths can be continuous and able to be connected. By
+  joining continuous segments, more points can be purged and less splines
+  need to be created.</p>
+</main></section>
+    </div>
+  <iframe hidden height="0" width="0" src="/phoenix/live_reload/frame"></iframe></body>
+</html>

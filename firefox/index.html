@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>w · Firefox</title>
+
+    <link phx-track-static rel="stylesheet" href="/assets/app.css">
+  </head>
+
+  <body>
+    <div class="sidebar">
+      <div class="title"><a href="/">w</a></div>
+      <div class="section">
+        <div class="header">
+          Things
+        </div>
+        <div class="list">
+          <div><a href="/firefox">Firefox</a></div>
+          <div><a href="/useful_stuff">Useful Stuff</a></div>
+          <div><a href="/jxlsplines">JXL Splines</a></div>
+          <div><a href="/something">Something</a></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="header">
+          Other Things
+        </div>
+        <div class="list">
+          <div><a href="https://bin.grass.moe/">Binaries</a></div>
+          <div><a href="/catmull_rom">Catmull-Rom</a></div>
+          <div><a href="https://tube.grass.moe/">grasstube</a></div>
+          <div><a href="https://m.grass.moe/">LL! Doujins</a></div>
+          <div><a href="https://booru.grass.moe/">LiveBooru</a></div>
+        </div>
+      </div>
+      <div class="section">
+        <div><a href="https://github.com/wwww-wwww">GitHub</a></div>
+      </div>
+      <div class="section">
+<a href="/contact">Profile</a>
+      </div>
+    </div>
+    <div class="content">
+      <div class="header">Firefox</div>
+      <section class="body"><main class="container">
+<p>
+  This version of firefox has the Jpeg XL patches, supports the use of
+  a version 1 limited or full range madVR 3dlut in video, and additionally
+  has a deband filter.
+</p>
+
+<p>
+  Download (Windows):
+  <a href="https://dist.grass.moe/firefox-105.0.en-US.win64.installer.exe">firefox-105.0.en-US.win64.installer.exe</a>
+  [2022.08.31] (Switched to beta tag for stability)
+</p>
+
+<p>[2022.04.19] <code>gfx.webrender.dcomp-video-overlay-win</code> needs to be disabled for video features.</p>
+
+<div class="tblcontents">
+  <div>
+    <ol>
+      <li><a href="#jxl">Jpeg XL</a></li>
+      <li>
+        <a href="#madvr">madVR 3DLUT</a>
+      </li>
+    </ol>
+  </div>
+</div>
+
+<h2 id="jxl">1. Jpeg XL</h2>
+
+<p>
+  <a href="https://dist.grass.moe/jxl/jxl-74241e0a131f6dde6105799c152bc20f15575ba8.patch">jxl-74241e0a131f6dde6105799c152bc20f15575ba8.patch</a>
+  [2021.10.19]
+</p>
+<p>
+  This patch contains these commits:
+</p>
+<ul>
+  <li><a href="https://phabricator.services.mozilla.com/D119700">D119700 - Add support for color profiles for JPEG
+      XL</a></li>
+  <li><a href="https://phabricator.services.mozilla.com/D122158">D122158 - Add support for animated JPEG XL</a>
+  </li>
+  <li><a href="https://phabricator.services.mozilla.com/D122159">D122159 - Add support for progressive decoding
+      for JPEG XL</a></li>
+</ul>
+
+<h3>Applying patches:</h3>
+<ol>
+  <li><a href="https://firefox-source-docs.mozilla.org/setup/index.html">https://firefox-source-docs.mozilla.org/setup/index.html</a>
+  </li>
+  <li>
+    <p>
+      Import the patch with:
+      <code>hg import filename.patch</code>
+    </p>
+  </li>
+  <li>
+    <p>
+      Pull latest changes with:
+      <code>hg pull</code>
+    </p>
+  </li>
+  <li>
+    <p>
+      View the tree using:
+      <code>hg wip</code>
+      <br>
+      You should see something similar to this:
+      <pre><code>$ hg wip
+o  659153:1d332a5ff4f9 git tip autoland Bug 1724846 - Split DL spatial tre...
+: o  659124:4da00500e13b release+treescript beta no bug - Bumping Firefox ...
+: ~
+: o  659105:fa16b7399db6 release+treescript release No bug - Tagging 1aa23...
+: o  659097:487e70ade5a3 ffxbld esr78 No Bug, mozilla-esr78 repo-update HS...
+: o  659017:452e0a21940d gijskruitbosch esr91 Bug 1721107 - block mk proto...
+:/
+: @  657545:68180f8380e0 wvvwvvvvwvvw Bug 1709815 - Add support for progressive decoding for JPEG XL. r=saschanaz
+: o  657544:4b87275d5215 wvvwvvvvwvvw Bug 1709818 - Add support for animated JPEG XL. r=saschanaz
+: o  657537:135c1eedbec4 wwwwwwww Bug 1709814 - Add support for color profiles for JPEG XL. r=tnikkel
+:/
+o  657536:a1a730897df8 mh+mozilla Bug 1723956 - Make --without-sysroot wor...</code></pre>
+    </p>
+  </li>
+  <li>
+    <p>
+      Take the id of the latest commit of the patch, in this case 657545:
+      <code><b>68180f8380e0</b></code>
+      and checkout the patch with:
+      <code>hg checkout 68180f8380e0</code>
+    </p>
+  </li>
+  <li>
+    <p>
+      Take the id of the first commit, in this case 657537:
+      <code><b>135c1eedbec4</b></code>
+      and run:
+      <code>hg rebase -s 135c1eedbec4 -d tip</code>
+    </p>
+  </li>
+  <li>Resolve conflicts if there exist any.</li>
+  <li>
+    <p>
+      Build with:
+      <code>./mach build</code>
+    </p>
+  </li>
+</ol>
+
+<h2 id="madvr">2. madVR 3DLUT</h2>
+<p>These are only available when using the webrender compositor with HW acceleration.</p>
+
+<p>
+  Webrender should be on by default.<br>
+
+  In <b>about:config</b>, make sure
+  <code>gfx.webrender.force-disabled</code>
+  is <b>false</b>.<br>
+
+  Additionally, you can set <code>gfx.webrender.enabled</code>
+  to <b>true</b>.
+</p>
+
+<p>
+  For 3dluts, the paths must be specified in:<br>
+  <pre><code>gfx.3dlut.path1
+gfx.3dlut.path2
+gfx.3dlut.path3</code></pre>
+</p>
+
+<p>
+  To make use of path2 and path3 with multiple monitors,
+  <code>gfx.3dlut.enable-multimonitor</code>
+  must be set to <b>true</b>.
+</p>
+
+<p>
+  Deband settings can be set with:
+  <pre><code>gfx.deband.grain
+gfx.deband.range
+gfx.deband.threshold</code></pre>
+</p>
+
+<p>
+  These can be changed on the fly, including
+  <code>gfx.3dlut.enable-multimonitor</code>
+</p>
+
+<h3>Generating a full range 3dlut</h3>
+<p>This is no longer required.</p>
+<p>Assuming calibration was done with <a href="https://displaycal.net/">DisplayCal</a> for madVR</p>
+<ol>
+  <li>Navigate to the directory of your generated calibration profile. It should be located at <div class="highlight">%AppData%/DisplayCAL/storage</div>
+  </li>
+  <li>Copy to a new folder, both the smallest/earliest .icm file named after the profile, and the target profile
+    <br>(ex: Rec709.bb0.9,2.2eGawt65.icm)</li>
+  <li>Start DisplayCal.</li>
+  <li>Enable the log window through the menu bar <div class="highlight">Tools > Show log window</div>.</li>
+  <li>In the 3D Lut tab, click <div class="highlight">Create 3D LUT...</div> and immediately cancel it.</li>
+  <li>You will see an output that contains a collink command like this:</li>
+  <pre><code>04:37:40,582 Command line:
+04:37:40,584   C:\Users\no\AppData\Roaming\DisplayCAL\dl\Argyll_V2.1.2\bin\collink.exe
+04:37:40,586     -v
+04:37:40,587     -qh
+04:37:40,587     -G
+04:37:40,588     -iaw
+04:37:40,589     -r65
+04:37:40,648     -n
+04:37:40,653     -3m
+04:37:40,660     -et
+04:37:40,672     -Et
+04:37:40,676     -b
+04:37:40,678     -Ib:0.9:2.2
+04:37:40,680     Rec709.icm
+04:37:40,685     "madVR 2021-03-31 05-47 180cdm² 0.2873x 0.2759y 2.2 M-S
+04:37:40,685       XYZLUT+MTX.icm"
+04:37:40,687     "madVR 2021-03-31 05-47 180cdm² 0.2873x 0.2759y 2.2 M-S
+04:37:40,687       XYZLUT+MTX.Rec709.bb0.9,2.2eGawt65.icm"</code></pre>
+  <li>Recreate the command, <b>removing -et and -Et</b>. It should look similar to this aside from the gamma and
+    filenames.</li>
+  <code>%AppData%\DisplayCAL\dl\Argyll_V2.1.2\bin\collink.exe -v -qh -G -iaw -r65 -n -3m -b -Ib:0.9:2.2 Rec709.icm
+    "madVR 2021-03-31 05-47 180cdm² 0.2873x 0.2759y 2.2 M-S XYZLUT+MTX.icm" "madVR 2021-03-31 05-47 180cdm²
+    0.2873x 0.2759y 2.2 M-S XYZLUT+MTX.Rec709.bb0.9,2.2eGawt65.icm"</code>
+  <li>Change Rec709.icm to the corresponding target profile filename which you copied from step 2.</li>
+  <li>You can also change the last argument (the output profile) to anything such as fullrange.icm</li>
+  <code>%AppData%\DisplayCAL\dl\Argyll_V2.1.2\bin\collink.exe -v -qh -G -iaw -r65 -n -3m -b -Ib:0.9:2.2
+    Rec709.bb0.9,2.2eGawt65.icm "madVR 2021-03-31 05-47 ... 2.2 M-S XYZLUT+MTX.icm" "fullrange.icm"</code>
+  <li>Run this command in the new folder where you copied your display profile and the corresponding target
+    profile.</li>
+  <li>Aside from the new fullrange.icm, there will be fullrange.3dlut, which will be the full range 3dlut.</li>
+</ol>
+</main></section>
+    </div>
+  <iframe hidden height="0" width="0" src="/phoenix/live_reload/frame"></iframe></body>
+</html>
