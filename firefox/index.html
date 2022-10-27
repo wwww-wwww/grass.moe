@@ -4,12 +4,9 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>w · Firefox</title>
-
+    <title>w · Firefox</title>
     <link phx-track-static rel="stylesheet" href="/assets/app.css">
   </head>
-
   <body>
     <div class="sidebar">
       <div class="title"><a href="/">w</a></div>
@@ -32,7 +29,7 @@
           <div><a href="https://bin.grass.moe/">Binaries</a></div>
           <div><a href="/catmull_rom">Catmull-Rom</a></div>
           <div><a href="https://tube.grass.moe/">grasstube</a></div>
-          <div><a href="https://m.grass.moe/">LL! Doujins</a></div>
+          <div><a href="https://m.grass.moe/">Doujins</a></div>
           <div><a href="https://booru.grass.moe/">LiveBooru</a></div>
         </div>
       </div>
@@ -51,15 +48,12 @@
   a version 1 limited or full range madVR 3dlut in video, and additionally
   has a deband filter.
 </p>
-
 <p>
   Download (Windows):
   <a href="https://dist.grass.moe/firefox-105.0.en-US.win64.installer.exe">firefox-105.0.en-US.win64.installer.exe</a>
   [2022.08.31] (Switched to beta tag for stability)
 </p>
-
 <p>[2022.04.19] <code>gfx.webrender.dcomp-video-overlay-win</code> needs to be disabled for video features.</p>
-
 <div class="tblcontents">
   <div>
     <ol>
@@ -70,9 +64,7 @@
     </ol>
   </div>
 </div>
-
 <h2 id="jxl">1. Jpeg XL</h2>
-
 <p>
   <a href="https://dist.grass.moe/jxl/jxl-74241e0a131f6dde6105799c152bc20f15575ba8.patch">jxl-74241e0a131f6dde6105799c152bc20f15575ba8.patch</a>
   [2021.10.19]
@@ -88,7 +80,6 @@
   <li><a href="https://phabricator.services.mozilla.com/D122159">D122159 - Add support for progressive decoding
       for JPEG XL</a></li>
 </ul>
-
 <h3>Applying patches:</h3>
 <ol>
   <li><a href="https://firefox-source-docs.mozilla.org/setup/index.html">https://firefox-source-docs.mozilla.org/setup/index.html</a>
@@ -150,46 +141,37 @@ o  657536:a1a730897df8 mh+mozilla Bug 1723956 - Make --without-sysroot wor...</c
     </p>
   </li>
 </ol>
-
 <h2 id="madvr">2. madVR 3DLUT</h2>
 <p>These are only available when using the webrender compositor with HW acceleration.</p>
-
 <p>
   Webrender should be on by default.<br>
-
   In <b>about:config</b>, make sure
   <code>gfx.webrender.force-disabled</code>
   is <b>false</b>.<br>
-
   Additionally, you can set <code>gfx.webrender.enabled</code>
   to <b>true</b>.
 </p>
-
 <p>
   For 3dluts, the paths must be specified in:<br>
   <pre><code>gfx.3dlut.path1
 gfx.3dlut.path2
 gfx.3dlut.path3</code></pre>
 </p>
-
 <p>
   To make use of path2 and path3 with multiple monitors,
   <code>gfx.3dlut.enable-multimonitor</code>
   must be set to <b>true</b>.
 </p>
-
 <p>
   Deband settings can be set with:
   <pre><code>gfx.deband.grain
 gfx.deband.range
 gfx.deband.threshold</code></pre>
 </p>
-
 <p>
   These can be changed on the fly, including
   <code>gfx.3dlut.enable-multimonitor</code>
 </p>
-
 <h3>Generating a full range 3dlut</h3>
 <p>This is no longer required.</p>
 <p>Assuming calibration was done with <a href="https://displaycal.net/">DisplayCal</a> for madVR</p>
