@@ -50,18 +50,18 @@
 </p>
 <p>
   Download (Windows):
-  <a href="https://dist.grass.moe/firefox-109.0.en-US.win64.installer.exe">firefox-109.0.en-US.win64.installer.exe</a>
-  [2022.12.28] (Firefox beta)
+  <a href="https://dist.grass.moe/firefox-114.0.en-US.win64.installer.exe">firefox-114.0.en-US.win64.installer.exe</a>
+  [2023.05.17] (Firefox beta)
 </p>
+<p>[2023.05.19] If on <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1704954">Nvidia and have high/mixed refresh rate monitors</a>, <code>gfx.webrender.dcomp-apply-1704954</code> must be disabled</p>
 <p>[2022.11.05] Reverted <a href="https://phabricator.services.mozilla.com/D159273">Bug 1795045 - qcms: Add support for only reading the curves from profiles.</a></p>
-<p><s>[2022.04.19] <code>gfx.webrender.dcomp-video-overlay-win</code> needs to be disabled for video features.</s></p>
+<p>[2022.04.19] <code>gfx.webrender.dcomp-video-overlay-win</code> needs to be disabled for video features.</p>
 <div class="tblcontents">
   <div>
     <ol>
       <li><a href="#jxl">Jpeg XL</a></li>
-      <li>
-        <a href="#madvr">madVR 3DLUT</a>
-      </li>
+      <li><a href="#deband">Deband</a></li>
+      <li><a href="#madvr">madVR 3DLUT</a></li>
     </ol>
   </div>
 </div>
@@ -142,7 +142,17 @@ o  657536:a1a730897df8 mh+mozilla Bug 1723956 - Make --without-sysroot wor...</c
     </p>
   </li>
 </ol>
-<h2 id="madvr">2. madVR 3DLUT</h2>
+<h2 id="deband">2. Deband</h2>
+<p>
+  Deband settings can be set with:
+  <ul>
+    <li><code>gfx.deband.grain</code></li>
+    <li><code>gfx.deband.range</code></li>
+    <li><code>gfx.deband.threshold</code></li>
+  </ul>
+  These can be changed on the fly.
+</p>
+<h2 id="madvr">3. madVR 3DLUT</h2>
 <p>These are only available when using the webrender compositor with HW acceleration.</p>
 <p>
   Webrender should be on by default.<br>
@@ -154,26 +164,18 @@ o  657536:a1a730897df8 mh+mozilla Bug 1723956 - Make --without-sysroot wor...</c
 </p>
 <p>
   For 3dluts, the paths must be specified in:<br>
-  <pre><code>gfx.3dlut.path1
-gfx.3dlut.path2
-gfx.3dlut.path3</code></pre>
+  <ul>
+    <li><code>gfx.3dlut.path1</code></li>
+    <li><code>gfx.3dlut.path2</code></li>
+    <li><code>gfx.3dlut.path3</code></li>
+  </ul>
 </p>
 <p>
   To make use of path2 and path3 with multiple monitors,
   <code>gfx.3dlut.enable-multimonitor</code>
-  must be set to <b>true</b>.
+  must be set to <b>true</b>. This can be changed on the fly.
 </p>
-<p>
-  Deband settings can be set with:
-  <pre><code>gfx.deband.grain
-gfx.deband.range
-gfx.deband.threshold</code></pre>
-</p>
-<p>
-  These can be changed on the fly, including
-  <code>gfx.3dlut.enable-multimonitor</code>
-</p>
-<h3>Generating a full range 3dlut</h3>
+<h3><s>Generating a full range 3dlut</s></h3>
 <p>This is no longer required.</p>
 <p>Assuming calibration was done with <a href="https://displaycal.net/">DisplayCal</a> for madVR</p>
 <ol>
