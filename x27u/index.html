@@ -50,7 +50,6 @@
     <ol>
       <li><a href="#introduction">Introduction</a></li>
       <li><a href="#design">Design</a></li>
-      <li><a href="#textclarity">Text Clarity</a></li>
       <li><a href="#basicmeasurements">Basic Measurements</a></li>
       <li><a href="#calibration">Calibration</a></li>
       <li><a href="#conclusion">Conclusion</a></li>
@@ -62,22 +61,26 @@
 monitors, or anything, and someone who actually cares about accurate colors.
 This is also my first step into desktop HDR.</p>
 <p>Gamers can go watch <a href="https://www.youtube.com/watch?v=9Fnmz2e_4xI">HUB</a></p>
+<p>For context, my daily driver primary monitor is a ViewSonic VX2768. It is a
+typical IPS display with a PFS phosphor WLED backlight. I regularly calibrate it
+and use ACM in Windows 11 for all desktop apps other than those that have proper
+color management. I use Firefox with a madVR 3dlut for video. Firefox by default
+does not have color management for video and while Chrome's does, it is not correct.</p>
 <p>These measurements are done with the new Calibrite Display Pro HL and DisplayCAL.</p>
 <h2 id="design">Design</h2>
 <img src="/images/DSC02722.JPG" style="max-width: 100%">
-<p>This is a good looking monitor. There is nothing around the monitor. It is
-just a rectangle. No design is the best design. I really like this design.</p>
+<p>This is a good looking monitor.</p>
 <p>The actual panel is a bit larger than 2560x1440. I noticed that sometimes,
 one side of the display has larger bezels. Turns out that it's got room to
 move the entire image to reduce burn-in.</p>
 <p>The viewing angles are not great. In the same first image, you can see that
 any area outside the center is a slightly more blue. It's very noticable in
 person, about 2' away from the display. This is not something I notice on my
-cheaper IPS monitor (ViewSonic VX2768)</p>
+cheaper IPS monitor.</p>
 <h2 id="textclarity">Text Clarity</h2>
 <img src="/images/DSC02724.JPG" style="max-width: 100%">
 <img src="/images/DSC02725.JPG" style="max-width: 100%">
-<p>It's not really an issue.</p>
+<p>It's not that bad.</p>
 <h2 id="basicmeasurements">Basic Measurements</h2>
 <h3>SDR Brightness</h3>
 <pre style="font-size: 1.3em">
@@ -188,19 +191,38 @@ Can't adjust color settings
 while it can produce 700 nits white, it is unable to produce 700 nits sRGB green.
 In theory, the profiling should measure the display at different light levels to
 produce a mapping of sRGB and other colorspaces at different target light levels.
-For example, I want SDR content at 200 nits, and it should know how to map sRGB
-scaled to 200 nits using this profile. This is not possible. HDR calibration
-does not work properly and can only rely on the display's tone mapping.</p>
+For example, I want SDR content to have a white level at 200 nits, and it should
+know how to map sRGB scaled to 200 nits using this profile. This is not possible.
+HDR calibration does not work properly and can only rely on the display's tone mapping.</p>
+<h2>Gaming experience</h2>
+<p>I'm not a gamer in the sense that I don't play many games. So I only tried
+this in MW2 (HDR) and Genshin Impact (Auto HDR).</p>
+<p>MW2's HDR looked good, the colors weren't over-saturated and only the menus
+looked like they had too much contrast. Dark scenes felt dark and had a lot of
+detail and highlights and light effects looked cool. The only real problem is
+that when I got flashbanged, the screen just turns gray.</p>
+<p>Genshin Impact's Auto HDR didn't look great. It was over-saturated and the
+contrast gave me a headache. In SDR, it looked even worse since on top of the
+excessive contrast, when there were many effects on the screen, the dimming
+caused it to look like there was an epilepsy filter.</p>
 <h2 id="conclusion">Conclusion</h2>
 <p>The automatic brightness limiter of this display can't be turned off. It is
 awful and you should not buy this monitor.</p>
-<p>OLED monitors suck. Sure, it's a fast monitor with fast response times and
-whatnot, but it's barely a noticable improvement over a cheap modern IPS.
-Even the deep blacks are not noticable in a lit environment compared to
-an IPS panel that has minimal IPS glow/backlight bleed. The $1000 premium
-is NOT worth it.</p>
+<p>OLED monitors suck. The response times are better, but I don't notice it in
+my regular use - not gaming. The blacks are deeper, but I'm in a well lit
+environment so I don't notice it. The $1000 premium is NOT worth it.</p>
 <p>HDR sucks. Or at least the current day implementations. The idea of HDR is
-great. I want it. But this doesn't work.</p>
+great. I want it. But this doesn't work. The main problem is that you can't profile
+a display in HDR mode since the display does a lot of HDR processing
+(<a href="https://hub.displaycal.net/forums/topic/madvr-hdr-3dlut-for-a-hdr-capable-monitor-question/#post-15620">Same comment from Florian of DisplayCAL</a>).
+</p>
+<p>What most people forget is that HDR does not mean it must be wide-gamut. More
+vibrancy does not equal good. It is especially not good when it doesn't map to
+the correct colorspace. And that is what profiling a display should enable.</p>
+<p>With the praise that other OLED monitors have gotten for their HDR
+performance and the idea that HDR in general was a big change, I set my
+expectations too high. I was hoping for it to be life changing like HRR
+and calibration. Unfortunately, I ended up extremely disappointed.</p>
 <p>I am definitely returning this one. Maybe I just need to try the ASUS PG27AQDM next.</p>
 </main></section>
     </div>
