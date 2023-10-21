@@ -48,15 +48,21 @@
   a version 1 limited or full range madVR 3dlut in video, and additionally
   has a deband filter.
 </p>
+
 <p>
   Download (Windows):
   <a href="https://dist.grass.moe/firefox-119.0.en-US.win64.installer.exe">firefox-119.0.en-US.win64.installer.exe</a>
   [2023.10.18] (Firefox beta)
 </p>
-<p>[2023.10.18] <code>gfx.webrender.dcomp-video-hw-overlay-win</code> needs to be disabled for video features.</p>
+
+<p>[2023.10.18] <code>gfx.webrender.dcomp-video-hw-overlay-win</code> and <code>gfx.webrender.dcomp-video-sw-overlay-win</code> needs to be disabled for video features.</p>
+
 <p>[2023.05.19] If on <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1704954">Nvidia and have high/mixed refresh rate monitors</a>, <code>gfx.webrender.dcomp-apply-1704954</code> must be disabled</p>
+
 <p>[2022.11.05] Reverted <a href="https://phabricator.services.mozilla.com/D159273">Bug 1795045 - qcms: Add support for only reading the curves from profiles.</a></p>
+
 <p>[2022.04.19] (118.0 and lower) <code>gfx.webrender.dcomp-video-overlay-win</code> needs to be disabled for video features.</p>
+
 <div class="tblcontents">
   <div>
     <ol>
@@ -66,7 +72,9 @@
     </ol>
   </div>
 </div>
+
 <h2 id="jxl">1. Jpeg XL</h2>
+
 <p>
   <a href="https://dist.grass.moe/jxl/jxl-74241e0a131f6dde6105799c152bc20f15575ba8.patch">jxl-74241e0a131f6dde6105799c152bc20f15575ba8.patch</a>
   [2021.10.19]
@@ -82,6 +90,7 @@
   <li><a href="https://phabricator.services.mozilla.com/D122159">D122159 - Add support for progressive decoding
       for JPEG XL</a></li>
 </ul>
+
 <h3>Applying patches:</h3>
 <ol>
   <li><a href="https://firefox-source-docs.mozilla.org/setup/index.html">https://firefox-source-docs.mozilla.org/setup/index.html</a>
@@ -143,7 +152,9 @@ o  657536:a1a730897df8 mh+mozilla Bug 1723956 - Make --without-sysroot wor...</c
     </p>
   </li>
 </ol>
+
 <h2 id="deband">2. Deband</h2>
+
 <p>
   Deband settings can be set with:
   <ul>
@@ -153,16 +164,21 @@ o  657536:a1a730897df8 mh+mozilla Bug 1723956 - Make --without-sysroot wor...</c
   </ul>
   These can be changed on the fly.
 </p>
+
 <h2 id="madvr">3. madVR 3DLUT</h2>
 <p>These are only available when using the webrender compositor with HW acceleration.</p>
+
 <p>
   Webrender should be on by default.<br>
+
   In <b>about:config</b>, make sure
   <code>gfx.webrender.force-disabled</code>
   is <b>false</b>.<br>
+
   Additionally, you can set <code>gfx.webrender.enabled</code>
   to <b>true</b>.
 </p>
+
 <p>
   For 3dluts, the paths must be specified in:<br>
   <ul>
@@ -171,11 +187,13 @@ o  657536:a1a730897df8 mh+mozilla Bug 1723956 - Make --without-sysroot wor...</c
     <li><code>gfx.3dlut.path3</code></li>
   </ul>
 </p>
+
 <p>
   To make use of path2 and path3 with multiple monitors,
   <code>gfx.3dlut.enable-multimonitor</code>
   must be set to <b>true</b>. This can be changed on the fly.
 </p>
+
 <h3><s>Generating a full range 3dlut</s></h3>
 <p>This is no longer required.</p>
 <p>Assuming calibration was done with <a href="https://displaycal.net/">DisplayCal</a> for madVR</p>
