@@ -16,7 +16,7 @@ config :website, WebsiteWeb.Endpoint,
 
 # Configure esbuild (the version is required)
 config :esbuild,
-  version: "0.14.29",
+  version: "0.17.11",
   default: [
     args:
       ~w(js/app.js js/index.js js/catrom.js js/splines.js js/gallery.js --bundle --target=es2017 --outdir=../priv/static/assets --external:/fonts/* --external:/images/* --external:/openseadragon/*),
