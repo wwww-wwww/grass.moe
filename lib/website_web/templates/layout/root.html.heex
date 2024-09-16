@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <%= if assigns[:page_title] do %>
+    <title>w · <%= assigns[:page_title] %></title>
+    <% else %>
+    <title>w</title>
+    <% end %>
+    <%= if assigns[:description] do %>
+    <meta name="description" content={assigns[:description]}/>
+    <% end %>
+    <link phx-track-static rel="stylesheet" href={Routes.static_path(@conn, "/assets/app.css")}/>
+  </head>
+
+  <body>
+    <div class="sidebar">
+      <div class="title"><%= link("w", to: Routes.page_path(@conn, :index)) %></div>
+      <div class="section">
+        <div class="header">
+          Things
+        </div>
+        <div class="list">
+          <div><%= link("Firefox", to: Routes.page_path(@conn, :page, :firefox)) %></div>
+          <div><%= link("Useful Stuff", to: Routes.page_path(@conn, :page, :useful_stuff)) %></div>
+          <div><%= link("JXL Art", to: Routes.page_path(@conn, :page, :jxlsplines)) %></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="header">
+          Other Things
+        </div>
+        <div class="list">
+          <div><a href="https://bin.grass.moe/">Binaries</a></div>
+          <div><%= link("Catmull-Rom Spline generator", to: Routes.page_path(@conn, :catmull_rom)) %></div>
+          <div><a href="https://tube.grass.moe/">grasstube</a></div>
+          <div><a href="https://booru.grass.moe/">LiveBooru</a></div>
+        </div>
+      </div>
+      <div class="section">
+        <div><a href="https://github.com/wwww-wwww">GitHub</a></div>
+      </div>
+      <div class="section">
+        <%= link("Profile", to: Routes.page_path(@conn, :page, :contact)) %>
+      </div>
+    </div>
+    <div class="content">
+      <div class="header"><%= assigns[:page_title] %></div>
+      <section class="body"><%= @inner_content %></section>
+    </div>
+  </body>
+</html>
