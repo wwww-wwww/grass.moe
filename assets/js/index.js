@@ -17,7 +17,7 @@ function spawn() {
 }
 
 document.addEventListener("click", e => {
-  for (let i = 0; i < 100; i++) {
+  for (let i = 0; i < 20; i++) {
     spawn()
   }
   mouse.x = e.clientX
@@ -25,7 +25,7 @@ document.addEventListener("click", e => {
 })
 
 document.addEventListener("mousemove", e => {
-  spawn()
+  // spawn()
   mouse.x = e.clientX
   mouse.y = e.clientY
 })
