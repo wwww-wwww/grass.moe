@@ -13,7 +13,11 @@ defmodule WebsiteWeb.PageController do
   def title(_), do: ""
 
   def index(conn, _params) do
-    render(conn, "index.html", page_title: "w", description: "any of a large family (Gramineae synonym Poaceae) of monocotyledonous mostly herbaceous plants with jointed stems, slender sheathing leaves, and flowers borne in spikelets of bracts.")
+    render(conn, "index.html",
+      page_title: "w",
+      description:
+        "any of a large family (Gramineae synonym Poaceae) of monocotyledonous mostly herbaceous plants with jointed stems, slender sheathing leaves, and flowers borne in spikelets of bracts."
+    )
   end
 
   def page(%{request_path: "/" <> page} = conn, _params) do

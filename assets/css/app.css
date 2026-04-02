@@ -1,4 +1,5 @@
-html, * {
+html,
+* {
   cursor: url("/images/ms_cursor.png"), auto;
 }
 
@@ -28,8 +29,8 @@ body {
   margin: 0;
   padding: 0;
   color: black;
-  font-family: LL, Arial, Helvetica, sans-serif;
-  font-size: 0.94em;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 1em;
   line-height: 1.34;
 }
 
@@ -38,26 +39,51 @@ body {
   display: flex;
   height: 100%;
   justify-content: center;
-  align-items: start;
+  align-items: stretch;
   overflow-x: hidden;
 }
 
 .sidebar {
+  display: flex;
+  flex-direction: column;
   padding: 1em 0 1em 1em;
+  box-sizing: border-box;
   overflow-y: auto;
-  text-align: right;
+  /* text-align: right; */
   width: 8em;
   flex-shrink: 0;
 }
 
-.sidebar > .section {
-  margin-top: 1em;
-  color: dimgray;
+.sidebar .title,
+.content .header {
+  font-size: 2em;
 }
 
-.sidebar > .title,
-.content > .header {
-  font-size: 2em;
+.sidebar {
+  align-items: end;
+}
+
+nav {
+  display: flex;
+  flex-direction: column;
+  align-items: end;
+  text-align: right;
+  flex-wrap: wrap;
+}
+
+@media screen and (width < 700px) {
+  body {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+    align-items: center;
+  }
+  nav {
+    gap: 0.5em;
+    flex-direction: row;
+    justify-content: center;
+  }
 }
 
 .sidebar a {
@@ -74,17 +100,17 @@ body {
 .sidebar a::before {
   content: "";
   position: absolute;
-  width: 0;
+  opacity: 0;
+  width: 100%;
   height: 100%;
   background-color: rgba(255, 191, 191, 0.4);
   z-index: -1;
   top: 0;
   right: 0;
-  transition: 0.2s width;
 }
 
 .sidebar a:hover::before {
-  width: 100%;
+  opacity: 1;
 }
 
 .content {
@@ -103,7 +129,7 @@ body {
   padding-top: 1em;
 }
 
-.content > .body >.container::after {
+.content > .body > .container::after {
   margin-top: 10em;
   display: block;
   content: "";
@@ -145,11 +171,6 @@ pre > code {
   padding: 0.25em 0.5em;
   background-color: rgba(0, 0, 0, 0.05);
   border-radius: 0.25em;
-}
-
-@font-face {
-  font-family: LL;
-  src: url('/fonts/FOT-SkipStd-M-small.otf');
 }
 
 .tblcontents {

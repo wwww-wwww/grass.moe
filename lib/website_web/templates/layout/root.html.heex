@@ -17,18 +17,14 @@
 
   <body>
     <div class="sidebar">
-      <div class="title"><%= link("w", to: Routes.page_path(@conn, :index)) %></div>
-      <div class="section">
-        <div class="list">
-          <div><%= link("Firefox", to: Routes.page_path(@conn, :page, :firefox)) %></div>
-          <div><%= link("Useful Stuff", to: Routes.page_path(@conn, :page, :useful_stuff)) %></div>
-          <div><%= link("JXL Art", to: Routes.page_path(@conn, :page, :jxlsplines)) %></div>
-          <div><%= link("Catmull-Rom Spline generator", to: Routes.page_path(@conn, :catmull_rom)) %></div>
-        </div>
-      </div>
-      <div class="section">
-        <div><a href="https://github.com/wwww-wwww">GitHub</a></div>
-      </div>
+      <span class="title"><%= link("w", to: Routes.page_path(@conn, :index)) %></span>
+      <nav>
+        <span><%= link("Firefox", to: Routes.page_path(@conn, :page, :firefox)) %></span>
+        <span><%= link("Useful Stuff", to: Routes.page_path(@conn, :page, :useful_stuff)) %></span>
+        <span><%= link("JXL Art", to: Routes.page_path(@conn, :page, :jxlsplines)) %></span>
+        <span><%= link("Catmull-Rom Spline generator", to: Routes.page_path(@conn, :catmull_rom)) %></span>
+        <span><a href="https://github.com/wwww-wwww">GitHub</a></span>
+      </nav>
     </div>
     <div class="content">
       <div class="header"><%= assigns[:page_title] %></div>
