@@ -116,7 +116,7 @@ nav {
 .content {
   max-width: 1000px;
   padding: 1em;
-  overflow-x: auto;
+  overflow: auto;
   flex: 1;
 }
 

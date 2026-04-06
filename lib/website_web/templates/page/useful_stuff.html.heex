@@ -1,7 +1,6 @@
 <style>
   .content {
     width: 1000px;
-    overflow: hidden;
   }
   #chk_backdropfilter:checked + b {
     position: absolute;
@@ -19,6 +18,28 @@
     align-items: start;
     overflow: none;
   }
+
+
+  .image-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .image-grid > div {
+    position: relative;
+    display: flex;
+    height: 200px;
+  }
+
+  .image-grid > div > div {
+    position: relative;
+  }
+
+  .image-grid > div > div > div {
+    position: absolute;
+    background: white;
+  }
 </style>
 
 <p style="display: flex; flex-direction: column; align-items: flex-start;">
@@ -29,6 +50,41 @@
   <a href="https://displaycal.net/icc-color-management-test/">DisplayCAL ICC Test</a>
   <a href="http://www.ericbrasseur.org/gamma.html?i=1">Gamma error in picture scaling</a>
 </p>
+
+<div class="image-grid">
+  <div>
+    <div>
+      <div>Untagged</div>
+      <img src={Routes.static_path(@conn, "/images/green_untagged.jpg")} />
+    </div>
+    <div>
+      <div>ProPhoto</div>
+      <img src={Routes.static_path(@conn, "/images/green_prophoto.jpg")} />
+    </div>
+  </div>
+  <div>
+    <div>
+      <div>css</div>
+      <img src={Routes.static_path(@conn, "/images/green_untagged.jpg")} />
+    </div>
+    <div>
+      <div>canvas</div>
+      <img src={Routes.static_path(@conn, "/images/green_prophoto.jpg")} />
+    </div>
+  </div>
+</div>
+
+<p style="position: relative; display: flex;">
+  <label for="chk_backdropfilter">Backdrop filter</label>
+  <input type="checkbox" id="chk_backdropfilter">
+</p>
+
+<div style="width: 100%; overflow-x: auto;">
+  <video src={Routes.static_path(@conn, "/images/test_bars_vert_grey.mp4")} controls autoplay></video>
+</div>
+<div style="width: 100%; overflow-x: auto;">
+  <video src={Routes.static_path(@conn, "/images/test_bars_vert_color.mp4")} controls autoplay></video>
+</div>
 
 <div style="width: 100%; overflow-x: auto;">
   <img src={Routes.static_path(@conn, "/images/whitetest.png")} />
@@ -43,29 +99,6 @@
   <img src={Routes.static_path(@conn, "/images/ICC_Rendering_Intent_Test.jpg")} />
 </div>
 
-<div style="display: flex">
-  <span>
-    <div>Untagged</div>
-    <img src={Routes.static_path(@conn, "/images/green_untagged.jpg")} />
-  </span>
-  <span>
-    <div>ProPhoto</div>
-    <img src={Routes.static_path(@conn, "/images/green_prophoto.jpg")} />
-  </span>
-</div>
-
 <p>
 <img src={Routes.static_path(@conn, "/images/cradle.jxl")} alt="Animated JXL test" />
 </p>
-
-<p style="position: relative; display: flex;">
-  <label for="chk_backdropfilter">Backdrop filter</label>
-  <input type="checkbox" id="chk_backdropfilter">
-</p>
-
-<div style="width: 100%; overflow-x: auto;">
-  <video src={Routes.static_path(@conn, "/images/test_bars_vert_grey.mp4")} controls autoplay></video>
-</div>
-<div style="width: 100%; overflow-x: auto;">
-  <video src={Routes.static_path(@conn, "/images/test_bars_vert_color.mp4")} controls autoplay></video>
-</div>
