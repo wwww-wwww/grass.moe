@@ -85,6 +85,40 @@
         ctx.fillRect(0, 0, 200, 200)
       </script>
     </div>
+    <div>
+      <div>webgpu</div>
+      <canvas id="canvas2" width="200" height="200"></canvas>
+      <script>
+      async function init() {
+          const adapter = await navigator.gpu?.requestAdapter()
+          const device = await adapter?.requestDevice()
+          if (!device) {
+              console.log("need a browser that supports WebGPU")
+              return
+          }
+
+          const context = canvas2.getContext("webgpu")
+          const presentationFormat = navigator.gpu.getPreferredCanvasFormat()
+          context.configure({ device: device, format: presentationFormat })
+
+          const encoder = device.createCommandEncoder()
+          const pass = encoder.beginRenderPass({
+              colorAttachments: [{
+                  clearValue: [0, 1, 0, 1],
+                  loadOp: 'clear',
+                  storeOp: 'store',
+                  view: context.getCurrentTexture().createView()
+              }],
+          })
+
+          pass.end()
+
+          const commandBuffer = encoder.finish()
+          device.queue.submit([commandBuffer])
+      }
+      init()
+      </script>
+    </div>
   </div>
 </div>
 
