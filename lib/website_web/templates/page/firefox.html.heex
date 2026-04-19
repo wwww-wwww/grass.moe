@@ -1,73 +1,175 @@
-<p>
-  This version of firefox has the Jpeg XL patches, supports the use of
-  a version 1 limited or full range madVR 3dlut in video, and additionally
-  has a deband filter.
-</p>
-
-<p>
-  Download (Windows):
-  <a
-    href="https://dist.grass.moe/firefox-148.0.en-US.win64.installer.exe">firefox-148.0.en-US.win64.installer.exe</a>
-  [2026.01.25] (Firefox beta)
-</p>
-
-<p>[2023.10.18] <code>gfx.webrender.dcomp-video-hw-overlay-win</code> and <code>gfx.webrender.dcomp-video-sw-overlay-win</code> needs to be disabled for video features.</p>
-
-<p>[2023.05.19] If on <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1704954">Nvidia and have high/mixed refresh rate monitors</a>, <code>gfx.webrender.dcomp-apply-1704954</code> must be disabled</p>
-
-<p>[2022.11.05] Reverted <a href="https://phabricator.services.mozilla.com/D159273">Bug 1795045 - qcms: Add support for only reading the curves from profiles.</a></p>
-
-<p>[2022.04.19] (118.0 and lower) <code>gfx.webrender.dcomp-video-overlay-win</code> needs to be disabled for video features.</p>
-
 <div class="tblcontents">
   <div>
     <ol>
-      <li><a href="#jxl">Jpeg XL</a></li>
-      <li><a href="#deband">Deband</a></li>
-      <li><a href="#madvr">madVR 3DLUT</a></li>
+      <li><a href="#bugs">Some hacks for some bugs</a></li>
+      <li><a href="#custom-firefox-build">Firefox build</a></li>
+      <li><a href="#other">Other</a></li>
     </ol>
   </div>
 </div>
 
-<h2 id="jxl">1. Jpeg XL</h2>
+<h2 id="bugs">Some hacks for some bugs</h2>
+
+<h3><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1935256">Bug 1935256 - requestVideoFrameCallback intervals limited to 40ms</a></h3>
+<p>
+nsRefreshDriver::Tick() runs at the nearest 40ms. So 23.976 fps(41.7ms) will skip a few frames about every 2-3 frames.
+<br />
+<a href="https://searchfox.org/firefox-main/source/dom/media/MediaDecoderStateMachine.cpp#108">MediaDecoderStateMachine.cpp#108</a>
+<br />
+<pre><code>- static const uint32_t AUDIO_DURATION_USECS = 40000
++ static const uint32_t AUDIO_DURATION_USECS = 1000
+</code></pre>
+
+Javascript now gets the event, but it can fire without the image having actually changed.
+<br />
+<a href="https://searchfox.org/firefox-main/source/dom/media/mediaelement/HTMLVideoElement.cpp#832">HTMLVideoElement.cpp#832</a>
+<br />
+<pre><code>+ if (!composited) return false;
+</code></pre>
+</p>
+
+<h3><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1870699">Bug 1870699 - Don't poll WebGPU from a timer</a></h3>
+<p>
+<a href="https://searchfox.org/firefox-main/source/dom/webgpu/ipc/WebGPUParent.cpp#38">WebGPUParent.cpp#38</a>
+<br />
+<pre><code>-const uint64_t POLL_TIME_MS = 100;
++const uint64_t POLL_TIME_MS = 1;
+</code></pre>
+</p>
+
+<h3>Unable to use importExternalTexture from &gt;8 bit video</h3>
+<p>
+<a href="https://searchfox.org/firefox-main/source/dom/webgpu/ExternalTexture.cpp#413">ExternalTexture.cpp#413</a>
+<br />
+<pre><code>-    gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
++    gfx::IntSize aSize, gfx::SurfaceFormat aFormat, int aBitDepth,
+     gfx::YUVRangedColorSpace aColorSpace,
+     const std::array&lt;float, 6&gt; & aSampleTransform,
+     const std::array&lt;float, 6&gt;& aLoadTransform)
+     : mSize(aSize),
+       mFormat(aFormat),
++      mBitDepth(aBitDepth),
+       mColorSpace(aColorSpace),
+</code></pre>
+
+<a href="https://searchfox.org/firefox-main/source/dom/webgpu/ExternalTexture.cpp#578">ExternalTexture.cpp#578</a>
+<br />
+<pre><code>+  int bitdepth = 8;
+</code></pre>
+
+<a href="https://searchfox.org/firefox-main/source/dom/webgpu/ExternalTexture.cpp#632">ExternalTexture.cpp#632</a>
+<br />
+<pre><code>         case gfx::ColorDepth::COLOR_10:
++          bitdepth = 10;
++          planeFormat = {ffi::WGPUTextureFormat_R16Unorm};
++          break;
+</code></pre>
+
+<a href="https://searchfox.org/firefox-main/source/dom/webgpu/ExternalTexture.cpp#668">ExternalTexture.cpp#668</a>
+<br />
+<pre><code>-  return ExternalTextureSourceHost(usedTextureIds, usedViewIds, aDesc.mSize,
+-                                   format, colorSpace, aDesc.mSampleTransform,
+-                                   aDesc.mLoadTransform);
++  return ExternalTextureSourceHost(
++      usedTextureIds, usedViewIds, aDesc.mSize, format, bitdepth, colorSpace,
++      aDesc.mSampleTransform, aDesc.mLoadTransform);
+ }
+
+ /* static */ ExternalTextureSourceHost
+ ExternalTextureSourceHost::CreateError() {
+   return ExternalTextureSourceHost(
+-      {}, {}, gfx::IntSize(0, 0), gfx::SurfaceFormat::R8G8B8A8,
++      {}, {}, gfx::IntSize(0, 0), gfx::SurfaceFormat::R8G8B8A8, 8,
+</code></pre>
+
+<a href="https://searchfox.org/firefox-main/source/dom/webgpu/ExternalTexture.cpp#1250">ExternalTexture.cpp#1250</a>
+<br />
+<pre><code>   auto colorSpaceTransform =
+      GetColorSpaceTransform(mColorSpace, aDestColorSpace);
++
++  if (mBitDepth == 10 || mBitDepth == 12) {
++    int mul = 64;
++    if (mBitDepth == 12) {
++      mul = 16;
++    }
++    colorSpaceTransform.srcRgbTfFromSrc.rows[0][0] *= mul;
++    colorSpaceTransform.srcRgbTfFromSrc.rows[0][1] *= mul;
++    colorSpaceTransform.srcRgbTfFromSrc.rows[0][2] *= mul;
++    colorSpaceTransform.srcRgbTfFromSrc.rows[1][0] *= mul;
++    colorSpaceTransform.srcRgbTfFromSrc.rows[1][1] *= mul;
++    colorSpaceTransform.srcRgbTfFromSrc.rows[1][2] *= mul;
++    colorSpaceTransform.srcRgbTfFromSrc.rows[2][0] *= mul;
++    colorSpaceTransform.srcRgbTfFromSrc.rows[2][1] *= mul;
++    colorSpaceTransform.srcRgbTfFromSrc.rows[2][2] *= mul;
++  }
+</code></pre>
+</p>
+
+<h3><a href="https://github.com/gfx-rs/wgpu/issues/7443">dx12 shader compilation is sometimes excessively slow #7443</a></h3>
+<p>
+<a href="https://searchfox.org/firefox-main/source/gfx/wgpu_bindings/src/client.rs#65">wgpu_bindings/src/client.rs#65</a>
+<br />
+<pre><code>-            zero_initialize_workgroup_memory: true,
++            zero_initialize_workgroup_memory: false,
+</code></pre>
+</p>
+
+
+<h2 id="custom-firefox-build">Firefox build</h2>
 
 <p>
+  Download (Windows):
   <a
-    href="https://dist.grass.moe/jxl/jxl-74241e0a131f6dde6105799c152bc20f15575ba8.patch">jxl-74241e0a131f6dde6105799c152bc20f15575ba8.patch</a>
-  [2021.10.19]
+    href="https://dist.grass.moe/firefox-150.0.en-US.win64.installer-rVFC-webgpupoll-nozero-16bitdeband">firefox-150.0.en-US.win64.installer-rVFC-webgpupoll-nozero-16bitdeband</a>
+  [2026.01.25] (Firefox beta)
 </p>
-<p>
-  This patch contains these commits:
-</p>
+
+<p>[2022.11.05] Reverted <a href="https://phabricator.services.mozilla.com/D159273">Bug 1795045 - qcms: Add support for only reading the curves from profiles.</a></p>
+
+<h3 id="custom-firefox-build-video-features">Video Features</h3>
 <ul>
-  <li><a href="https://phabricator.services.mozilla.com/D119700">D119700 - Add support for color profiles for JPEG
-      XL</a></li>
-  <li><a href="https://phabricator.services.mozilla.com/D122158">D122158 - Add support for animated JPEG XL</a>
-  </li>
-  <li><a href="https://phabricator.services.mozilla.com/D122159">D122159 - Add support for progressive decoding
-      for JPEG XL</a></li>
+  <li><code>gfx.webrender.dcomp-video-hw-overlay-win</code>=<code>false</code></li>
+  <li><code>gfx.webrender.dcomp-video-sw-overlay-win</code>=<code>false</code></li>
 </ul>
 
-<h3>Applying patches:</h3>
+<h4 id="custom-firefox-build-deband">Deband</h4>
+<ul>
+  <li><code>gfx.deband.grain</code></li>
+  <li><code>gfx.deband.range</code></li>
+  <li><code>gfx.deband.threshold</code></li>
+</ul>
+
+<h4 id="custom-firefox-build-madvr">madVR 3dlut</h4>
+<ul>
+  <li><code>gfx.3dlut.path1</code></li>
+  <li><code>gfx.3dlut.path2</code></li>
+  <li><code>gfx.3dlut.path3</code></li>
+  <li><code>gfx.3dlut.enable-multimonitor</code></li>
+</ul>
+
+<h2 id="other">Other</h2>
+
+<h3>Applying patches: (with mercurial)</h3>
+<p>Firefox now has git support. This is outdated.</p>
 <ol>
   <li><a
       href="https://firefox-source-docs.mozilla.org/setup/index.html">https://firefox-source-docs.mozilla.org/setup/index.html</a>
   </li>
   <li>
     <p>
-      Import the patch with:
+      Import patches with
       <code>hg import filename.patch</code>
     </p>
   </li>
   <li>
     <p>
-      Pull latest changes with:
+      Pull latest changes with
       <code>hg pull</code>
     </p>
   </li>
   <li>
     <p>
-      View the tree using:
+      View the tree using
       <code>hg wip</code>
       <br>
       You should see something similar to this:
@@ -79,92 +181,35 @@ o  659153:1d332a5ff4f9 git tip autoland Bug 1724846 - Split DL spatial tre...
 : o  659097:487e70ade5a3 ffxbld esr78 No Bug, mozilla-esr78 repo-update HS...
 : o  659017:452e0a21940d gijskruitbosch esr91 Bug 1721107 - block mk proto...
 :/
-: @  657545:68180f8380e0 wvvwvvvvwvvw Bug 1709815 - Add support for progressive decoding for JPEG XL. r=saschanaz
-: o  657544:4b87275d5215 wvvwvvvvwvvw Bug 1709818 - Add support for animated JPEG XL. r=saschanaz
-: o  657537:135c1eedbec4 wwwwwwww Bug 1709814 - Add support for color profiles for JPEG XL. r=tnikkel
+: o  657544:4b87275d5215 me another patch
+: o  657537:135c1eedbec4 me some patch
 :/
 o  657536:a1a730897df8 mh+mozilla Bug 1723956 - Make --without-sysroot wor...</code></pre>
     </p>
   </li>
   <li>
     <p>
-      Take the id of the latest commit of the patch, in this case 657545:
-      <code><b>68180f8380e0</b></code>
-      and checkout the patch with:
-      <code>hg checkout 68180f8380e0</code>
+      With imported patch <code>o  ######:id</code>
+      Run
+      <code>hg rebase -s &lt;id&gt; -d &lt;branch&gt;</code>
     </p>
   </li>
   <li>
     <p>
-      Take the id of the first commit, in this case 657537:
-      <code><b>135c1eedbec4</b></code>
-      and run:
-      <code>hg rebase -s 135c1eedbec4 -d tip</code>
-    </p>
-  </li>
-  <li>Resolve conflicts if there exist any.</li>
-  <li>
-    <p>
-      Build with:
+      Build with
       <code>./mach build</code>
     </p>
   </li>
 </ol>
 
-<h2 id="deband">2. Deband</h2>
-
-<p>
-  Deband settings can be set with:
-  <ul>
-    <li><code>gfx.deband.grain</code></li>
-    <li><code>gfx.deband.range</code></li>
-    <li><code>gfx.deband.threshold</code></li>
-  </ul>
-  These can be changed on the fly.
-</p>
-
-<h2 id="madvr">3. madVR 3DLUT</h2>
-<p>These are only available when using the webrender compositor with HW acceleration.</p>
-
-<p>
-  Webrender should be on by default.<br>
-
-  In <b>about:config</b>, make sure
-  <code>gfx.webrender.force-disabled</code>
-  is <b>false</b>.<br>
-
-  Additionally, you can set <code>gfx.webrender.enabled</code>
-  to <b>true</b>.
-</p>
-
-<p>
-  For 3dluts, the paths must be specified in:<br>
-  <ul>
-    <li><code>gfx.3dlut.path1</code></li>
-    <li><code>gfx.3dlut.path2</code></li>
-    <li><code>gfx.3dlut.path3</code></li>
-  </ul>
-</p>
-
-<p>
-  To make use of path2 and path3 with multiple monitors,
-  <code>gfx.3dlut.enable-multimonitor</code>
-  must be set to <b>true</b>. This can be changed on the fly.
-</p>
-
-<h3><s>Generating a full range 3dlut</s></h3>
-<p>This is no longer required.</p>
-<p>Assuming calibration was done with <a href="https://displaycal.net/">DisplayCal</a> for madVR</p>
+<h3 id="madvr-3dlut">Generating a full range 3dlut</h3>
 <ol>
-  <li>Navigate to the directory of your generated calibration profile. It should be located at <div
-      class="highlight">%AppData%/DisplayCAL/storage</div>
-  </li>
+  <li><div class="highlight">%AppData%/DisplayCAL/storage</div></li>
   <li>Copy to a new folder, both the smallest/earliest .icm file named after the profile, and the target profile
     <br>(ex: Rec709.bb0.9,2.2eGawt65.icm)</li>
   <li>Start DisplayCal.</li>
   <li>Enable the log window through the menu bar <div class="highlight">Tools > Show log window</div>.</li>
   <li>In the 3D Lut tab, click <div class="highlight">Create 3D LUT...</div> and immediately cancel it.</li>
-  <li>You will see an output that contains a collink command like this:</li>
   <pre><code>04:37:40,582 Command line:
 04:37:40,584   C:\Users\no\AppData\Roaming\DisplayCAL\dl\Argyll_V2.1.2\bin\collink.exe
 04:37:40,586     -v
@@ -183,16 +228,13 @@ o  657536:a1a730897df8 mh+mozilla Bug 1723956 - Make --without-sysroot wor...</c
 04:37:40,685       XYZLUT+MTX.icm"
 04:37:40,687     "madVR 2021-03-31 05-47 180cdm² 0.2873x 0.2759y 2.2 M-S
 04:37:40,687       XYZLUT+MTX.Rec709.bb0.9,2.2eGawt65.icm"</code></pre>
-  <li>Recreate the command, <b>removing -et and -Et</b>. It should look similar to this aside from the gamma and
-    filenames.</li>
+  <li>Remove <b>-et and -Et</b></li>
   <code>%AppData%\DisplayCAL\dl\Argyll_V2.1.2\bin\collink.exe -v -qh -G -iaw -r65 -n -3m -b -Ib:0.9:2.2 Rec709.icm
     "madVR 2021-03-31 05-47 180cdm² 0.2873x 0.2759y 2.2 M-S XYZLUT+MTX.icm" "madVR 2021-03-31 05-47 180cdm²
     0.2873x 0.2759y 2.2 M-S XYZLUT+MTX.Rec709.bb0.9,2.2eGawt65.icm"</code>
-  <li>Change Rec709.icm to the corresponding target profile filename which you copied from step 2.</li>
-  <li>You can also change the last argument (the output profile) to anything such as fullrange.icm</li>
+  <li>Replace Rec709.icm with the corresponding target profile filename from step 2.</li>
+  <li>Replace the last argument (the output profile) with a new filename.</li>
   <code>%AppData%\DisplayCAL\dl\Argyll_V2.1.2\bin\collink.exe -v -qh -G -iaw -r65 -n -3m -b -Ib:0.9:2.2
     Rec709.bb0.9,2.2eGawt65.icm "madVR 2021-03-31 05-47 ... 2.2 M-S XYZLUT+MTX.icm" "fullrange.icm"</code>
-  <li>Run this command in the new folder where you copied your display profile and the corresponding target
-    profile.</li>
-  <li>Aside from the new fullrange.icm, there will be fullrange.3dlut, which will be the full range 3dlut.</li>
+  <li>This outputs fullrange.icm and fullrange.3dlut.</li>
 </ol>
