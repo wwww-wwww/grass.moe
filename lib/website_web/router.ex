@@ -20,6 +20,7 @@ defmodule WebsiteWeb.Router do
     get "/", PageController, :index
     get "/catmull_rom", PageController, :catmull_rom
     get "/gallery", PageController, :gallery
+    get "/hdr0", PageController, :hdr0
     get "/:page", PageController, :page
   end
 

@@ -1,0 +1,103 @@
+<canvas id="canvas" style="width: 100%; height: 100%; position: fixed; left: 0; top: 0"></canvas>
+<script>
+    async function run() {
+        const canvas = document.getElementById("canvas")
+        canvas.width = canvas.getBoundingClientRect().width
+        canvas.height = canvas.getBoundingClientRect().height
+
+        console.log(window.matchMedia("(dynamic-range: high)"))
+
+        const adapter = await navigator.gpu?.requestAdapter({})
+        const device = await adapter?.requestDevice()
+
+        const context = canvas.getContext("webgpu")
+        context.configure({ device, format: "rgba16float", toneMapping: { mode: "extended" } })
+
+        const shader = `
+struct Uniforms {
+    a: f32,
+    b: f32,
+    c: f32,
+    d: f32,
+}
+
+@group(0) @binding(0) var<uniform> t: Uniforms;
+
+struct VertexOutput {
+    @builtin(position) position: vec4<f32>,
+    @location(0) uv: vec2<f32>,
+};
+
+@vertex
+fn vs_main(@builtin(vertex_index) vertex_index: u32) -> VertexOutput {
+    var pos = array<vec2<f32>, 3>(
+        vec2<f32>(-1.0, -1.0), // Bottom-left
+        vec2<f32>( 3.0, -1.0), // Far-right
+        vec2<f32>(-1.0,  3.0)  // Far-top
+    );
+
+    var out: VertexOutput;
+    let p = pos[vertex_index];
+    out.position = vec4<f32>(p, 0.0, 1.0);
+
+    out.uv = vec2<f32>(p.x * 0.5 + 0.5, 1.0 - (p.y * 0.5 + 0.5));
+    return out;
+}
+
+@fragment
+fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
+    let pos = in.uv;
+    if (pos.x > t.b && pos.y > t.b && pos.x < t.c && pos.y < t.c){
+        return vec4<f32>(t.a, t.a, t.a, t.a);
+    }
+    return vec4<f32>(0, 0, 0, 1);
+}`
+
+        const module = device.createShaderModule({ code: shader })
+
+        const pipeline = device.createRenderPipeline({
+            layout: "auto",
+            vertex: { module: module },
+            fragment: { module: module, targets: [{ format: "rgba16float" }] },
+        })
+
+        const uniform_buffer = device.createBuffer({
+            size: 16,
+            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+        })
+        let a = 1
+
+        const render = async () => {
+            // a = !a
+            let t = (performance.now() / 1000 * 10) % 1
+            const data = new Float32Array(4)
+            data[0] = a * 5
+            data[1] = 0.5 - t / 2
+            data[2] = 0.5 + t / 2
+            data[3] = 1
+            device.queue.writeBuffer(uniform_buffer, 0, data)
+
+            const encoder = device.createCommandEncoder()
+            const pass = encoder.beginRenderPass({
+                colorAttachments: [
+                    { view: context.getCurrentTexture(), loadOp: "clear", storeOp: "store" },
+                ],
+            })
+            pass.setPipeline(pipeline)
+            pass.setBindGroup(
+                0,
+                device.createBindGroup({
+                    layout: pipeline.getBindGroupLayout(0),
+                    entries: [{ binding: 0, resource: uniform_buffer }],
+                }),
+            )
+
+            pass.draw(3)
+            pass.end()
+            device.queue.submit([encoder.finish()])
+            requestAnimationFrame(render)
+        }
+        requestAnimationFrame(render)
+    }
+    run()
+</script>

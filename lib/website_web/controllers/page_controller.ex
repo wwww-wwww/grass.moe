@@ -37,4 +37,10 @@ defmodule WebsiteWeb.PageController do
     |> put_root_layout(false)
     |> render("gallery.html")
   end
+
+  def hdr0(conn, _params) do
+    conn
+    |> put_root_layout(false)
+    |> render("hdr0.html")
+  end
 end

@@ -34,7 +34,8 @@ defmodule WebsiteWeb.BuildTest do
       "/something",
       "/contact",
       "/splines",
-      "/catmull_rom"
+      "/catmull_rom",
+      "/hdr0"
     ]
     |> Enum.each(&generate_html_for_route(conn, &1))
   end
