@@ -2,15 +2,17 @@
   .content {
     width: 1000px;
   }
+
   #chk_backdropfilter:checked + b {
-    position: absolute;
+    position: fixed;
     width: 100%;
     height: 100%;
     top: 0;
     left: 0;
-    backdrop-filter: blur(1px);
+    backdrop-filter: blur(0.1px);
     pointer-events: none;
   }
+
   main {
     display: flex;
     flex-direction: column;
@@ -18,7 +20,6 @@
     align-items: start;
     overflow: none;
   }
-
 
   .image-grid {
     display: flex;
@@ -125,6 +126,7 @@
 <p style="position: relative; display: flex;">
   <label for="chk_backdropfilter">Backdrop filter</label>
   <input type="checkbox" id="chk_backdropfilter">
+  <b></b>
 </p>
 
 <div style="width: 100%; overflow-x: auto;">
